@@ -5,13 +5,15 @@
 // @grant       none
 // @version     1.0
 // @author      zluo01
-// @description 7/5/2025, 4:16:14 PM
+// @description Script to fetch EDHREC Combo for selected card, only display combo that contains the selected card.
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    // simple in-memory volatile cache to cache combo data
+    /**
+     * simple in-memory volatile cache to cache combo data
+     */
     class TTLCache {
         constructor(ttlHours = 1) {
             this.ttl = ttlHours * 60 * 60 * 1000; // Convert hours to milliseconds
@@ -40,14 +42,21 @@
 
     let cache = new TTLCache();
 
-    // Function to extract data-hash from image src URL
+    /**
+     * Get the data-hash value from img url
+     * @param src img url
+     * @returns {*|null}
+     */
     function extractDataHashFromImageSrc(src) {
         // Extract hash from URL like: https://assets.moxfield.net/cards/card-k7lVb-normal.webp?204767761
         const match = src.match(/\/card-([^-]+)-/);
         return match ? match[1] : null;
     }
 
-    // Function to get data-hash from deckview image
+    /**
+     * Get the card name for the current display card
+     * @returns {*|null}
+     */
     function getCurrentDisplayCardName() {
         const imgElement = document.querySelector('img.deckview-image.img-card');
         if (imgElement && imgElement.src) {
@@ -59,14 +68,18 @@
         return null;
     }
 
-    // Function to find card name by data-hash value
+    /**
+     * Find card name from given card data-hash
+     * @param hash card data-hash
+     * @returns {null}
+     */
     function findCardNameByHash(hash) {
         // Find element with matching data-hash attribute
         const element = document.querySelector(`[data-hash="${hash}"]`);
         if (element) {
             let cardName = '';
 
-            // Method 1: Look for div with class 'decklist-card-phantomsearch' within the element
+            // visual spoiler/
             const phantomDiv = element.querySelector('.decklist-card-phantomsearch');
             if (phantomDiv) {
                 cardName = phantomDiv.textContent?.trim() || '';
@@ -85,7 +98,11 @@
         return null;
     }
 
-    // Function to format card name into dash-connected lowercase string
+    /**
+     * Change card name to dash connected lower case name to match EDHREC format
+     * @param cardName
+     * @returns {string}
+     */
     function formatCardName(cardName) {
         return cardName
             .toLowerCase()
@@ -119,10 +136,9 @@
 
             const data = await response.json();
 
-            // Extract header and cardlists
             const combos = data.container?.json_dict?.cardlists || [];
 
-            // Filter cardlists to only include combos where cardviews contains the formatted card name
+            // Only keep combo that with the selected card
             const filteredCombos = combos.filter(combo => {
                 return combo.cardviews && combo.cardviews.some(cardview =>
                     cardview.sanitized === formattedName
