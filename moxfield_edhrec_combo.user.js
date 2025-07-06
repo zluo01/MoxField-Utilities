@@ -176,7 +176,7 @@
         }
 
         // Find the aside element to append after
-        const asideElement = document.querySelector('aside.deckview-image-container.is-owner');
+        const asideElement = document.querySelector('aside.deckview-image-container');
         if (!asideElement) {
             return;
         }
